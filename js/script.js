@@ -40,7 +40,7 @@ const displayMovies = async () => {
          document.querySelector('#popular-movies').appendChild(div)
     })
 }
-
+// Display Popular Shows
 const displayShows = async () => {
     const { results } = await fetchAPIData('tv/popular')
     results.forEach(show => {
@@ -78,12 +78,92 @@ const displayShows = async () => {
     })
 }
 
+// Show Single Movie Details
+const showMovieDetails = async () => {
+  const movieId = window.location.search.split('=')[1]
+  const movie = await fetchAPIData(`movie/${movieId}`)
+  // Create a new element for a single movie and display it in the DOM
+  const div = document.createElement('div')
+  div.innerHTML = `
+     <div class="details-top">
+          <div>
+          ${
+            movie.poster_path ?
+            `
+            <img
+              src="https://image.tmdb.org/t/p/w500${movie.poster_path}"
+              class="card-img-top"
+              alt="${movie.title}"
+            />
+            
+            `
+            :
+            `
+             <img
+              src="images/no-image.jpg"
+              class="card-img-top"
+              alt="${movie.title}"
+            />
+            `
+          }
+           
+          </div>
+          <div>
+            <h2>${movie.title}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              ${movie.vote_average.toFixed()}/ 10
+            </p>
+            <p class="text-muted">Release Date: ${movie.release_date}</p>
+            <p>
+              ${movie.overview}
+            </p>
+            <h5>Genres</h5>
+            <ul class="list-group">
+           ${movie.genres.map(genre => `<li>${genre.name}</li>`).join('')}
+            </ul>
+            <a href="${movie.homepage}" class="btn">Visit Movie Homepage</a>
+          </div>
+        </div>
+        <div class="details-bottom">
+          <h2>Movie Info</h2>
+          <ul>
+            <li><span class="text-secondary">Budget:</span> $${addCommasToNumbers(movie.budget)}</li>
+            <li><span class="text-secondary">Revenue:</span> $${addCommasToNumbers(movie.revenue)}</li>
+            <li><span class="text-secondary">Runtime:</span> ${movie.runtime} minutes</li>
+            <li><span class="text-secondary">Status:</span> ${movie.status}</li>
+          </ul>
+          <h4>Production Companies</h4>
+          <div class="list-group">
+          ${movie.production_companies.map(company => company.name).join(', ')}
+          </div>
+        </div>
+  `
+  document.getElementById('movie-details').appendChild(div)
+}
+
+
+
+// Show Spinner
+const showSpinner = () => {
+  document.querySelector('.spinner').classList.add('show')
+}
+
+// Hide Spinner
+const hideSpinner = () => {
+  document.querySelector('.spinner').classList.remove('show')
+}
+
 // Fetch API Movie Data
 const fetchAPIData = async (endPoint) => {
     const API_KEY = 'e7fc0d311099e5e1dffea6b071e7902b'
     const API_MOVIE = 'https://api.themoviedb.org/3/'
+    // Show spinner before fetching data
+    showSpinner()
     const res = await fetch(`${API_MOVIE}${endPoint}?api_key=${API_KEY}&language=en-US`)
     const data = res.json()
+    // Hide spinner when data is fetched
+    hideSpinner()
     return data
 }
 
@@ -99,6 +179,11 @@ const changeColorOfActiveLink = () => {
     })
 }
 
+// Add Commas To Numbers
+const addCommasToNumbers = (number) => {
+   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // Init
 const init = () => {
     switch(global.currentPage) {
@@ -110,7 +195,7 @@ const init = () => {
             displayShows()
             break
         case '/movie-details.html':
-            console.log('Movie details')
+            showMovieDetails()
             break
         case '/search.html':
             console.log('Search')
