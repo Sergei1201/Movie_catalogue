@@ -82,6 +82,8 @@ const displayShows = async () => {
 const showMovieDetails = async () => {
   const movieId = window.location.search.split('=')[1]
   const movie = await fetchAPIData(`movie/${movieId}`)
+  // Load Background Image Using Specific API
+   displayBackgroundImage('movie', movie.backdrop_path)
   // Create a new element for a single movie and display it in the DOM
   const div = document.createElement('div')
   div.innerHTML = `
@@ -142,6 +144,29 @@ const showMovieDetails = async () => {
   document.getElementById('movie-details').appendChild(div)
 }
 
+// Background Image
+const displayBackgroundImage = (type, imagePath) => {
+  const overLayDiv = document.createElement('div')
+  overLayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${imagePath})`
+  overLayDiv.style.backgroundSize = 'cover'
+  overLayDiv.style.backgroundPosition = 'center'
+  overLayDiv.style.backgroundRepeat = 'no-repeat'
+  overLayDiv.style.height = '100vh'
+  overLayDiv.style.width = '100vw'
+  overLayDiv.style.position = 'absolute'
+  overLayDiv.style.top = '0'
+  overLayDiv.style.left = '0'
+  overLayDiv.style.zIndex = '-1'
+  overLayDiv.style.opacity = '0.1'
+
+  // Check for the type
+  if (type === 'movie') {
+    document.getElementById('movie-details').appendChild(overLayDiv)
+  } else {
+    document.getElementById('show-details').appendChild(overLayDiv)
+  }
+
+}
 
 
 // Show Spinner
