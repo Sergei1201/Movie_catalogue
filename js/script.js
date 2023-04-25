@@ -3,7 +3,9 @@ const global = {
     search: {
       type: '',
       page: 1,
-      term: ''
+      term: '',
+      totalPages: 0,
+      totalResults: 0
     },
     api: {
       api_key: 'e7fc0d311099e5e1dffea6b071e7902b',
@@ -374,7 +376,7 @@ const fetchSearchAPI = async () => {
   const API_MOVIE = global.api.api_movie
   // Show spinner before fetching data
   showSpinner()
-  const res = await fetch(`${API_MOVIE}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`)
+  const res = await fetch(`${API_MOVIE}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}&page=${global.search.page}`)
   const data = res.json()
     // Hide spinner when data is fetched
     hideSpinner()
@@ -390,10 +392,16 @@ const searchData = async () => {
   global.search.term = urlParams.get('search-term')
   // Check if there's is a search term
   if (global.search.term !== '' && global.search.term !== null) {
-    const {results} = await fetchSearchAPI()
+    const {results, page, total_results, total_pages} = await fetchSearchAPI()
+    global.search.page = page
+    global.search.totalResults = total_results
+    global.search.totalPages = total_pages
+   
+
     // Check if the results exist
     if (results.length === 0) {
       showAlert('Sorry, no results have been found')
+      return
     } else {
       showAlert('See the results', 'alert-success')
       displaySearchResults(results)
@@ -407,6 +415,12 @@ const searchData = async () => {
 
 // Display Search Results
 const displaySearchResults = (results) => {
+    // Clean the search heading results
+    document.getElementById('search-results-heading').innerHTML = ''
+    // Clean the search results
+    document.getElementById('search-results').innerHTML = ''
+    // Clean the pagination
+    document.getElementById('pagination').innerHTML = ''
      results.forEach(result => {
         const div = document.createElement('div')
         div.classList.add('card')
@@ -438,7 +452,46 @@ const displaySearchResults = (results) => {
           </div>
          ` 
          document.querySelector('#search-results').appendChild(div)
+         // Display the number of the found results
+         document.querySelector('#search-results-heading').innerHTML = `
+          <h2>${results.length} of ${global.search.totalResults} for the term <span style="font-style:italic"> ${global.search.term}</span></h2>
+         `
     })
+    // Display pagination
+    displayPagination()
+}
+
+// Display Pagination
+const displayPagination = () => {
+  // Create div
+  const div = document.createElement('div')
+  // Add class
+  div.classList.add('pagination')
+  div.innerHTML = `
+  <button class="btn btn-primary" id="prev">Prev</button>
+          <button class="btn btn-primary" id="next">Next</button>
+          <div class="page-counter">Page ${global.search.page} of ${global.search.totalPages}</div>
+  `
+  // Append child and insert into the DOM
+  document.getElementById('pagination').appendChild(div)
+  // After displaying pagination disable the previous page if it's the first one
+  if (global.search.page === 1) {
+    document.getElementById('prev').disabled = true
+  }
+  if (global.search.page === global.search.totalPages) {
+    document.getElementById('next').disabled = true
+  }
+  // Navigate through the pages back and forth
+  document.getElementById('next').addEventListener('click', async () => {
+    global.search.page ++
+    const {results, total_pages} = await fetchSearchAPI()
+    displaySearchResults(results)
+  })
+  document.getElementById('prev').addEventListener('click', async () => {
+    global.search.page --
+    const {results, total_pages} = await fetchSearchAPI()
+    displaySearchResults(results)
+  })
 }
 
 // Show Alert
